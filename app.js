@@ -1,4 +1,5 @@
-
+let xp = 0;
+let level = 1;
 let lesson=[];
 let i=0;
 let lives=3;
@@ -106,6 +107,21 @@ rec.start();
 function check(n,btn){
 if(document.getElementById("nextBtn").style.display==="block") return;
 let q=lesson[i];
+//vibration
+if(n!==q.correct){
+  if(navigator.vibrate){
+    navigator.vibrate(200);
+  }
+}
+// XP+LEVEL UP
+xp += 10;
+
+if(xp >= 100){
+  xp = 0;
+  level++;
+}
+
+updateXP();
 
 // frase completa
 let full=q.sentence.replace("____",q.options[n]);
@@ -141,6 +157,8 @@ fb.className="wrongText";
 lives--;
 wrong.push(q);
 }
+document.getElementById("correctSound").play();
+document.getElementById("wrongSound").play();
 
 // mostra bottone continua
 document.getElementById("nextBtn").style.display="block";
@@ -235,3 +253,11 @@ return;
 
 load();
 };
+function updateXP(){
+
+let percent = xp;
+
+document.getElementById("xpFill").style.width = percent + "%";
+document.getElementById("level").innerText = "Livello " + level;
+
+}

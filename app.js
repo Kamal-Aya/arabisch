@@ -159,14 +159,25 @@ document.querySelectorAll("#answers button").forEach(b=>b.disabled=true);
 let fb = document.getElementById("feedback");
 
 if(n === q.correct){
+
   btn.classList.add("correct");
-  fb.innerText = "✔️";
+  fb.innerText = "✔️ Richtig";
   score++;
+
 }else{
+
   btn.classList.add("wrong");
-  fb.innerText = "❌";
+  fb.innerText = "❌ Falsch";
   lives--;
-}
+
+  // evidenzia risposta corretta
+  document.querySelectorAll("#answers button")[q.correct]
+    .classList.add("correct");
+
+  // 🔊 AUDIO RISPOSTA CORRETTA
+  speak(q.options[q.correct]);
+
+} 
 
 // mostra next
 document.getElementById("nextBtn").style.display = "block";

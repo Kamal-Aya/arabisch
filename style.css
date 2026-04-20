@@ -1,3 +1,8 @@
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: Arial, sans-serif;
+}
 .menu {
   text-align: center;
   padding: 20px;
@@ -150,6 +155,7 @@ body {
   margin:auto;
   background:white;
   min-height:100vh;
+  min-height: 100dvh;/* FIX ALTEZZA MOBILE REALE */
   display:flex;
   flex-direction:column;
   justify-content:space-between;
@@ -364,6 +370,22 @@ transform:scale(0.96);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+#sentence {
+  direction: ltr;
+  text-align: left;
+}
+
+.answers button {
+  direction: ltr;
+  text-align: left;
+}
+
+/* FIX MOBILE BOTTONI */
+#nextBtn {
+  position: sticky;
+  bottom: 10px;
+  z-index: 10;
 }
 
 

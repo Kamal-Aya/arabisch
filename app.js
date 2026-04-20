@@ -1,263 +1,247 @@
-let xp = 0;
-let level = 1;
-let lesson=[];
-let i=0;
-let lives=3;
-let score=0;
-let wrong=[];
+let lesson = [];
+let i = 0;
+let score = 0;
+let lives = 3;
 
-// LOAD JSON
-fetch("data/lesson1.json")
-.then(r=>r.json())
-.then(data=>{
-lesson=data;
+// NAVIGAZIONE
+function startLesson(name){
+  window.location.href = "?lesson=" + name;
+}
+
+// PARAMETRI
+let params = new URLSearchParams(window.location.search);
+let lessonName = params.get("lesson");
+
+// CARICA JSON
+if(lessonName){
+
+  fetch("data/" + lessonName + ".json")
+  .then(r=>r.json())
+  .then(data=>{
+
+    lesson = data.questions;
+
+    showTheory(data.theory);
+
+  })
+  .catch(err=>{
+    alert("Errore JSON ❌");
+    console.log(err);
+  });
+
+}
+
+// TEORIA
+function showTheory(theory){
+
+document.body.innerHTML = `
+<div class="app">
+  <h2>${theory.ar}</h2>
+  <p>${theory.de}</p>
+  <button onclick="startQuiz()">Start ▶️</button>
+</div>
+`;
+
+}
+
+// START QUIZ
+function startQuiz(){
+
+i = 0;
+score = 0;
+lives = 3;
+
+document.body.innerHTML = `
+<div class="app fadeIn">
+
+  <div class="top">
+    <button class="homeBtn" onclick="goHome()">🏠</button>
+    <div id="hearts"></div>
+  </div>
+
+  <div class="progressBar">
+    <div id="progress" class="progress"></div>
+  </div>
+
+  <div id="sentence"></div>
+
+  <img id="image"/>
+
+  <div id="answers" class="answers"></div>
+
+  <div id="feedback"></div>
+
+  <button id="nextBtn" style="display:none">Weiter</button>
+
+</div>
+`;
+
+
+document.getElementById("nextBtn").onclick = next;
+
 load();
-});
 
-// LOAD
+}
+
+// LOAD DOMANDA
 function load(){
 
-let q=lesson[i];
+if(!lesson || lesson.length === 0) return;
+if(!lesson[i]) return;
 
-document.getElementById("sentence").innerText=q.sentence;
+let q = lesson[i];
+
+// frase
+document.getElementById("sentence").innerText = q.sentence;
+
+// immagine
 let img = document.getElementById("image");
+img.src = q.image || "";
+img.onerror = ()=> img.style.display = "none";
 
-img.src = q.image;
-
-// fallback automatico se immagine non carica
-img.onerror = function(){
-this.src = "https://via.placeholder.com/300?text=Image";
-};
+// cuori
+document.getElementById("hearts").innerText = "❤️".repeat(lives);
 
 // progress
-let progress=(i/lesson.length)*100;
-document.getElementById("progress").style.width=progress+"%";
+let progress = (i / lesson.length) * 100;
+document.getElementById("progress").style.width = progress + "%";
 
-// hearts
-document.getElementById("hearts").innerText="❤️".repeat(lives);
+// risposte
+let div = document.getElementById("answers");
+div.innerHTML = "";
 
-// answers
-let div=document.getElementById("answers");
-div.innerHTML="";
+q.options.forEach((opt, idx)=>{
+  let b = document.createElement("button");
+  b.innerText = opt;
 
-q.options.forEach((opt,idx)=>{
-let b=document.createElement("button");
-b.innerText=opt;
+  b.onclick = ()=>{
+    speak(opt);
+    check(idx, b);
+  };
 
-b.onclick=()=>check(idx,b);
-
-div.appendChild(b);
+  div.appendChild(b);
 });
 
 }
 
-// 🔊 AUDIO AUTOMATICO (FIX)
-document.getElementById("audio").onclick = () => {
+// AUDIO
+function speak(text){
+  speechSynthesis.cancel();
 
-let full = lesson[i].sentence.replace("____","");
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang = "ar-SA";
+  u.rate = 0.85;
 
-let u = new SpeechSynthesisUtterance(full);
-u.lang = "ar-SA";
-u.rate = 0.8;
-u.pitch = 1;
-
-// FIX reale voci
-function speakNow(){
-let voices = speechSynthesis.getVoices();
-let v = voices.find(v => v.lang.includes("ar"));
-
-if(v) u.voice = v;
-
-speechSynthesis.cancel();
-speechSynthesis.speak(u);
-}
-
-// se voci non pronte
-if(speechSynthesis.getVoices().length === 0){
-speechSynthesis.onvoiceschanged = speakNow;
-}else{
-speakNow();
-}
-
-};
-
-// 🎤 VOCE BAMBINO
-function startVoice(){
-
-let rec=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-rec.lang="ar-SA";
-
-rec.onresult=(e)=>{
-let said=e.results[0][0].transcript;
-
-if(said.includes(lesson[i].options[lesson[i].correct])){
-score++;
-}else{
-lives--;
-wrong.push(lesson[i]);
-}
-
-next();
-};
-
-rec.start();
+  setTimeout(()=>{
+    speechSynthesis.speak(u);
+  },100);
 }
 
 // CHECK
-function check(n,btn){
-if(document.getElementById("nextBtn").style.display==="block") return;
-let q=lesson[i];
-//vibration
-if(n!==q.correct){
-  if(navigator.vibrate){
-    navigator.vibrate(200);
-  }
-}
-// XP+LEVEL UP
-xp += 10;
+function check(n, btn){
 
-if(xp >= 100){
-  xp = 0;
-  level++;
-}
+let q = lesson[i];
 
-updateXP();
+// blocca click multipli
+if(document.getElementById("nextBtn").style.display === "block") return;
 
 // frase completa
-let full=q.sentence.replace("____",q.options[n]);
-document.getElementById("sentence").innerText=full;
+let full = q.sentence.replace("____", q.options[n]);
+document.getElementById("sentence").innerText = full;
 
-// audio frase completa
-let u=new SpeechSynthesisUtterance(full);
-u.lang="ar-SA";
-u.rate=0.8;
-
-let voices = speechSynthesis.getVoices();
-let v = voices.find(v => v.lang.includes("ar"));
-if(v) u.voice = v;
-
-speechSynthesis.cancel();
-speechSynthesis.speak(u);
+// audio frase
+speak(full);
 
 // blocca bottoni
 document.querySelectorAll("#answers button").forEach(b=>b.disabled=true);
 
-// FEEDBACK
-let fb=document.getElementById("feedback");
+// feedback
+let fb = document.getElementById("feedback");
 
-if(n===q.correct){
-btn.classList.add("correct");
-fb.innerText="صحيح ✅";
-fb.className="correctText";
-score++;
+if(n === q.correct){
+  btn.classList.add("correct");
+  fb.innerText = "✔️";
+  score++;
 }else{
-btn.classList.add("wrong");
-fb.innerText="خطأ ❌";
-fb.className="wrongText";
-lives--;
-wrong.push(q);
+  btn.classList.add("wrong");
+  fb.innerText = "❌";
+  lives--;
 }
-document.getElementById("correctSound").play();
-document.getElementById("wrongSound").play();
 
-// mostra bottone continua
-document.getElementById("nextBtn").style.display="block";
+// mostra next
+document.getElementById("nextBtn").style.display = "block";
+
 }
+
 // NEXT
 function next(){
 
 i++;
 
-if(lives<=0){
-end();
-return;
+if(lives <= 0){
+  end();
+  return;
 }
 
-if(i>=lesson.length){
-
-if(wrong.length>0){
-alert("Ripetiamo errori!");
-lesson=wrong;
-wrong=[];
-i=0;
-load();
-return;
+if(i >= lesson.length){
+  end();
+  return;
 }
 
-end();
-return;
-}
+document.getElementById("feedback").innerText = "";
+document.getElementById("nextBtn").style.display = "none";
 
 load();
+
 }
 
-// END + BADGE
+// END
 function end(){
+document.body.innerHTML = `
 
-let percent=Math.round((score/lesson.length)*100);
+<div class="app">
 
-// voto tedesco
-let grade="5";
-let text="";
+  <div class="top">
+    <button class="homeBtn" onclick="goHome()">🏠</button>
+    <div class="hearts" id="hearts"></div>
+  </div>
 
-if(percent>=95){grade="1+"; text="Sehr gut";}
-else if(percent>=85){grade="1"; text="Sehr gut";}
-else if(percent>=70){grade="2"; text="Gut";}
-else if(percent>=55){grade="3"; text="Befriedigend";}
-else if(percent>=40){grade="4"; text="Ausreichend";}
-else{grade="5"; text="Nicht bestanden";}
+  <div class="progressBar">
+    <div id="progress" class="progress"></div>
+  </div>
 
-document.querySelector(".card").innerHTML=`
+  <div id="sentence"></div>
 
-<div class="resultBox">
-<h1>📊 Ergebnis</h1>
+  <img id="image"/>
 
-<p style="font-size:26px;">${score}/${lesson.length}</p>
+  <div id="answers" class="answers"></div>
 
-<p style="font-size:30px;">Note: ${grade}</p>
+  <div id="feedback"></div>
 
-<p>${text}</p>
+  <button id="nextBtn" style="display:none">Weiter</button>
 
-<button onclick="location.reload()">🔄 Try Again</button>
 </div>
-
 `;
+
+
 }
 
-//bottone continua
-document.getElementById("nextBtn").onclick=()=>{
-
-document.getElementById("feedback").innerText="";
-document.getElementById("nextBtn").style.display="none";
-
-i++;
-
-if(lives<=0){
-end();
-return;
-}
-
-if(i>=lesson.length){
-
-if(wrong.length>0){
-lesson=wrong;
-wrong=[];
-i=0;
-load();
-return;
-}
-
-end();
-return;
-}
-
-load();
-};
 function updateXP(){
 
-let percent = xp;
+  let bar = document.getElementById("xpFill");
 
-document.getElementById("xpFill").style.width = percent + "%";
-document.getElementById("level").innerText = "Livello " + level;
+  bar.style.width = xp + "%";
 
+  bar.style.boxShadow = "0 0 20px #58cc02";
+
+  setTimeout(()=>{
+    bar.style.boxShadow = "0 0 10px #58cc02";
+  },300);
+
+  document.getElementById("level").innerText = "Livello " + level;
 }
+//Home
+function goHome(){
+  window.location.href = "index.html";
+}
+

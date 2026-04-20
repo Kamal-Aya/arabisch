@@ -36,8 +36,8 @@ function showTheory(theory){
 
 document.body.innerHTML = `
 <div class="app">
-  <h2>${theory.ar}</h2>
-  <p>${theory.de}</p>
+  <h2 dir="rtl">${theory.ar}</h2>
+<p dir="ltr">${theory.de}</p>
   <button onclick="startQuiz()">Start ▶️</button>
 </div>
 `;
@@ -57,6 +57,7 @@ document.body.innerHTML = `
   <div class="top">
     <button class="homeBtn" onclick="goHome()">🏠</button>
     <div id="hearts"></div>
+<div id="score"></div>
   </div>
 
   <div class="progressBar">
@@ -92,7 +93,9 @@ if(!lesson[i]) return;
 let q = lesson[i];
 
 // frase
-document.getElementById("sentence").innerText = q.sentence;
+let s = document.getElementById("sentence");
+s.innerText = q.sentence;
+s.dir = "ltr";
 
 // immagine
 let img = document.getElementById("image");
@@ -101,7 +104,8 @@ img.onerror = ()=> img.style.display = "none";
 
 // cuori
 document.getElementById("hearts").innerText = "❤️".repeat(lives);
-
+//score
+document.getElementById("score").innerText = (i+1) + "/" + lesson.length;
 // progress
 let progress = (i / lesson.length) * 100;
 document.getElementById("progress").style.width = progress + "%";
@@ -110,13 +114,25 @@ document.getElementById("progress").style.width = progress + "%";
 let div = document.getElementById("answers");
 div.innerHTML = "";
 
-q.options.forEach((opt, idx)=>{
+let options = q.options.map((opt, index) => {
+  return { text: opt, index: index };
+});
+
+// mescola
+options.sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5);
+
+options.forEach((optObj)=>{
+
   let b = document.createElement("button");
-  b.innerText = opt;
+  b.innerText = optObj.text;
+  b.dir = "ltr";
+
+  // SALVIAMO indice corretto nel bottone
+  b.dataset.index = optObj.index;
 
   b.onclick = ()=>{
-    speak(opt);
-    check(idx, b);
+    speak(optObj.text);
+    check(optObj.index, b);
   };
 
   div.appendChild(b);
@@ -126,10 +142,18 @@ q.options.forEach((opt, idx)=>{
 
 // AUDIO
 function speak(text){
+
   speechSynthesis.cancel();
 
   let u = new SpeechSynthesisUtterance(text);
-  u.lang = "ar-SA";
+
+  // rilevamento base lingua
+  if(/[a-zA-Z]/.test(text)){
+    u.lang = "de-DE"; // tedesco
+  } else {
+    u.lang = "ar-SA"; // arabo
+  }
+
   u.rate = 0.85;
 
   setTimeout(()=>{
@@ -169,15 +193,19 @@ if(n === q.correct){
   btn.classList.add("wrong");
   fb.innerText = "❌ Falsch";
   lives--;
+  
 
   // evidenzia risposta corretta
-  document.querySelectorAll("#answers button")[q.correct]
-    .classList.add("correct");
+document.querySelectorAll("#answers button").forEach(b=>{
+  if(Number(b.dataset.index) === q.correct){
+    b.classList.add("correct");
+  }
+});
 
   // 🔊 AUDIO RISPOSTA CORRETTA
   speak(q.options[q.correct]);
 
-} 
+}
 
 // mostra next
 document.getElementById("nextBtn").style.display = "block";
@@ -208,34 +236,29 @@ load();
 
 // END
 function end(){
+
+let message = "";
+
+if(lives <= 0){
+  message = "❌ Versuche es noch einmal!";
+}else{
+  message = "🎉 Sehr gut gemacht!";
+}
+
 document.body.innerHTML = `
+<div class="app resultBox">
 
-<div class="app">
+  <h1>${message}</h1>
 
-  <div class="top">
-    <button class="homeBtn" onclick="goHome()">🏠</button>
-    <div class="hearts" id="hearts"></div>
-  </div>
+  <p>${score} / ${lesson.length}</p>
 
-  <div class="progressBar">
-    <div id="progress" class="progress"></div>
-  </div>
-
-  <div id="sentence"></div>
-
-  <img id="image"/>
-
-  <div id="answers" class="answers"></div>
-
-  <div id="feedback"></div>
-
-  <button id="nextBtn" style="display:none">Weiter</button>
+  <button onclick="startQuiz()">Nochmal 🔁</button>
+  <button onclick="goHome()">🏠 Home</button>
 
 </div>
 `;
 
-
-}
+}// Update XP bar
 
 function updateXP(){
 

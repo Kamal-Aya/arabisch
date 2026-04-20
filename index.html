@@ -10,40 +10,48 @@
 </head>
 
 <body>
+  
+  <div class="menu">
+    <h1>
+  العَرَبِيَّة
+  <span>📚 Arabisch lernen</span>
+</h1>
+  
 
-<div class="app">
+  <div class="lessons">
+    <div class="lesson" onclick="startLesson('lesson1')">
+      <span>🔤</span>
+      <p>الأفعال<br><small>Verben</small></p>
+    </div>
 
-<div class="top">
-<div class="hearts" id="hearts">❤️❤️❤️</div>
+    <div class="lesson" onclick="startLesson('lesson2')">
+      <span>📝</span>
+      <p>الصفات<br><small>Adjektive</small></p>
+    </div>
+
+    <div class="lesson" onclick="startLesson('lesson3')">
+      <span>📖</span>
+      <p>الجملة الاسمية<br><small>Nominalsatz</small></p>
+    </div>
+
+    <div class="lesson" onclick="startLesson('lesson4')">
+      <span>🧠</span>
+      <p>الضمائر<br><small>Pronomen</small></p>
+    </div>
+
+    <div class="lesson" onclick="startLesson('lesson5')">
+      <span>📢</span>
+      <p>الأزمنة<br><small>Zeiten</small></p>
+    </div>
+
+    <div class="lesson" onclick="startLesson('lesson6')">
+      <span>💬</span>
+      <p>محادثة<br><small>Dialog</small></p>
+    </div>
+
+  </div>
+
 </div>
-
-<div class="progressBar">
-<div class="progress" id="progress"></div>
-</div>
-<div class="xpBox">
-  <div class="xpFill" id="xpFill"></div>
-</div>
-
-<div class="level" id="level">Livello 1</div>
-
-<div class="card">
-<div class="audio" id="audio">🔊 ANHÖREN</div>
-<audio id="correctSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3"></audio>
-<audio id="wrongSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_2514b8b0d4.mp3"></audio>
-
-<img id="image" src="">
-<div class="sentence" id="sentence"></div>
-
-<div class="answers" id="answers"></div>
-
-<div class="feedback" id="feedback"></div>
-
-</div>
-
-<button class="next" id="nextBtn">WEITER ➡️</button>
-
-</div>
-
 <script src="app.js"></script>
 
 </body>
